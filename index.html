@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miami Flow v6.5 - Premium Transit</title>
+    <title>Miami Flow v6.6 - Premium Transit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -35,6 +35,12 @@
         .rank-gold { background: linear-gradient(70deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
         #map { height: 100%; width: 100%; filter: grayscale(0.2) contrast(1.1); }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -100,8 +106,29 @@
             </section>
 
             <section id="view-forum" class="view-panel view-hidden p-6 pt-16">
-                <h2 class="text-3xl font-black text-slate-900 mb-6 heading-font">Miami Pulse</h2>
-                <div class="space-y-4 no-scrollbar overflow-y-auto h-[600px] pb-20">
+                <div class="flex justify-between items-end mb-6">
+                    <h2 class="text-3xl font-black text-slate-900 heading-font">Miami Pulse</h2>
+                    <span class="iconify text-2xl text-slate-400" data-icon="lucide:search"></span>
+                </div>
+                
+                <div class="space-y-4 no-scrollbar overflow-y-auto h-[630px] pb-32">
+                    <div class="bg-orange-50 p-5 rounded-[28px] border border-orange-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-orange-500 text-white px-4 py-1 rounded-bl-2xl text-[10px] font-black tracking-widest uppercase">Official</div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white">
+                                <span class="iconify" data-icon="lucide:megaphone"></span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-orange-900">MDT Transit Alert</span>
+                                <p class="text-[9px] text-orange-700/60 font-bold uppercase">Today 08:30 AM</p>
+                            </div>
+                        </div>
+                        <h4 class="font-bold text-orange-900 mb-1">今日线路绕行：Art Basel 预热活动</h4>
+                        <p class="text-xs text-orange-800/80 leading-relaxed">
+                            受 Wynwood 区域活动影响，Route 2, 32 及 77 路将在 14:00 - 22:00 期间绕行。请前往临时站点候车。
+                        </p>
+                    </div>
+
                     <div class="bg-white p-5 rounded-[28px] shadow-sm border border-slate-100">
                         <div class="flex items-center gap-2 mb-3">
                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-8 h-8 rounded-full bg-blue-100">
@@ -111,7 +138,7 @@
                         <h4 class="font-bold text-slate-900 mb-2">雷暴警告！100路全面延误 ⛈️</h4>
                         <p class="text-sm text-slate-500 leading-relaxed">刚刚在柯林斯大道，雨大到看不清路，公交都在原地待命，建议改坐 Metrorail。</p>
                         <div class="flex gap-4 mt-4 text-slate-400">
-                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify" data-icon="lucide:heart"></span> 24</span>
+                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify text-pink-500" data-icon="lucide:heart"></span> 24</span>
                             <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify" data-icon="lucide:message-circle"></span> 8</span>
                         </div>
                     </div>
@@ -123,7 +150,11 @@
                             <span class="text-[10px] text-slate-400 ml-auto">1h ago</span>
                         </div>
                         <h4 class="font-bold text-slate-900 mb-2">Wynwood 附近交通管制</h4>
-                        <p class="text-sm text-slate-500 leading-relaxed">今天有涂鸦艺术节，2路和32路都在绕行，大家注意避让。</p>
+                        <p class="text-sm text-slate-500 leading-relaxed">今天有涂鸦艺术节，2路和32路都在绕行，大家注意避让。官方通告已经发了。</p>
+                        <div class="flex gap-4 mt-4 text-slate-400">
+                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify text-pink-500" data-icon="lucide:heart"></span> 56</span>
+                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify" data-icon="lucide:message-circle"></span> 12</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -227,11 +258,12 @@
     </div>
 
     <script>
-        // 逻辑保持原样，仅做视图适配
+        // 初始化逻辑
         let currentState = "IDLE";
         let baseArrivalTime = new Date(new Date().getTime() + 45 * 1000); 
         let route14Time = new Date(new Date().getTime() + 15 * 60 * 1000); 
 
+        // Leaflet 地图初始化
         const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([25.7743, -80.1918], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
         
@@ -242,6 +274,7 @@
         });
         L.marker([25.7743, -80.1918], { icon: userIcon }).addTo(map);
 
+        // 每秒更新时钟和倒计时
         function updateLogic() {
             const now = new Date();
             document.getElementById('clock-top').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
@@ -263,6 +296,7 @@
 
         setInterval(updateLogic, 1000);
 
+        // 交互函数
         function handleButtonClick() {
             if (currentState === "IDLE") {
                 currentState = "WAITING";
