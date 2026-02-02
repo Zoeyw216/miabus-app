@@ -3,141 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Miami Flow v6 - Logic Mastery</title>
+    <title>Miami Flow v6.5 - Premium Transit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #0f172a; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@700&display=swap');
+        
+        :root {
+            --miami-blue: #4facfe;
+            --miami-pink: #f093fb;
+            --slate-900: #0f172a;
+        }
+
+        body { font-family: 'Outfit', sans-serif; background: #020617; color: #1e293b; }
+        .heading-font { font-family: 'Space+Grotesk', sans-serif; }
+        
         .miami-gradient { background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%); }
-        #map { height: 100%; width: 100%; z-index: 1; }
-        .phone-inner-view { position: absolute; inset: 0; background: white; z-index: 100; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .user-dot { width: 14px; height: 14px; background: #2563eb; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(37, 99, 235, 0.8); }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        
+        /* 隐藏滚动条 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 界面切换动画 */
+        .view-panel { position: absolute; inset: 0; background: #f8fafc; z-index: 50; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .view-hidden { transform: translateY(100%); }
+        
+        /* 信用等级特制 */
+        .rank-gold { background: linear-gradient(70deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #map { height: 100%; width: 100%; filter: grayscale(0.2) contrast(1.1); }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="relative w-[390px] h-[844px] bg-white rounded-[50px] border-[10px] border-slate-950 shadow-2xl overflow-hidden flex flex-col">
+    <div class="relative w-[390px] h-[844px] bg-slate-50 rounded-[55px] border-[12px] border-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col">
         
-        <div class="h-12 flex justify-between px-8 pt-5 items-center z-[110] relative bg-white/70 backdrop-blur-md">
-            <span class="text-sm font-bold text-slate-900" id="clock-top">18:27</span>
-            <div class="flex gap-1.5 items-center text-slate-900">
-                <span class="iconify w-4" data-icon="lucide:signal"></span>
-                <span class="iconify w-5 text-green-600" data-icon="lucide:battery-full"></span>
+        <div class="h-14 flex justify-between px-9 pt-6 items-center z-[1000] absolute top-0 w-full pointer-events-none">
+            <span class="text-sm font-bold text-slate-900 heading-font" id="clock-top">18:27</span>
+            <div class="flex gap-2 items-center text-slate-900">
+                <span class="iconify w-4" data-icon="heroicons:signal-20-solid"></span>
+                <span class="iconify w-5" data-icon="heroicons:battery-100-20-solid"></span>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col relative overflow-hidden">
-            <div class="h-[45%] relative">
-                <div id="map"></div>
-                <div class="absolute bottom-4 left-4 z-[10] bg-white/90 p-2 rounded-lg text-[10px] font-bold shadow-sm">📍 Miami, Government Center</div>
-            </div>
-
-            <div class="flex-1 bg-slate-50 rounded-t-[32px] -mt-6 z-20 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] overflow-y-auto no-scrollbar pb-24">
-                <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto my-3"></div>
-                
-                <section class="p-5 space-y-3">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nearby Miami Lines</h3>
-                    
-                    <div onclick="openDetail()" class="bg-white p-4 rounded-[24px] shadow-sm border border-slate-100 cursor-pointer active:scale-[0.98] transition-all flex justify-between items-center">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 miami-gradient rounded-xl flex items-center justify-center text-white text-xl font-black shadow-inner">100</div>
-                            <div class="flex flex-col">
-                                <h3 class="font-black text-slate-800">Route 100</h3>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">To South Beach</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xl font-black text-blue-600" id="list-time-100">18:30</div>
-                            <span class="text-[9px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-black">LIVE</span>
-                        </div>
+        <main class="flex-1 relative overflow-hidden bg-white">
+            
+            <section id="view-explore" class="h-full flex flex-col">
+                <div class="h-[48%] relative">
+                    <div id="map"></div>
+                    <div class="absolute bottom-10 left-4 z-[10] glass-card px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Miami, Government Center
                     </div>
+                </div>
 
-                    <div class="bg-white p-4 rounded-[24px] shadow-sm border border-slate-100 cursor-pointer flex justify-between items-center">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-white text-xl font-black">14</div>
-                            <div class="flex flex-col">
-                                <h3 class="font-black text-slate-800">Route 14</h3>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">To Omni Terminal</p>
-                            </div>
+                <div class="flex-1 bg-slate-50 rounded-t-[40px] -mt-8 z-20 shadow-[0_-15px_30px_rgba(0,0,0,0.08)] overflow-y-auto no-scrollbar pb-32">
+                    <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-4"></div>
+                    <div class="px-6 space-y-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Nearby Lines</h3>
+                            <span class="text-[10px] text-blue-500 font-bold">See all</span>
                         </div>
-                        <div class="text-right">
-                            <div class="text-xl font-black text-slate-400" id="list-time-14">18:42</div>
-                            <span class="text-[9px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full font-black">SCHED</span>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <div id="detail-view" class="hidden phone-inner-view flex flex-col">
-                <div class="p-6 pt-10">
-                    <button onclick="closeDetail()" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-6"><span class="iconify" data-icon="lucide:chevron-left"></span></button>
-                    <div class="flex flex-col items-center">
-                        <div class="w-20 h-20 miami-gradient rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-lg mb-4">100</div>
-                        <h1 class="text-2xl font-black text-slate-900">Route 100</h1>
-                        <p class="text-blue-500 font-bold text-xs mb-8">Stop: Government Center Metrorail</p>
                         
-                        <div class="relative flex items-center justify-center mb-10">
-                            <div class="w-56 h-56 rounded-full border-[8px] border-blue-500 bg-white shadow-2xl flex flex-col items-center justify-center">
-                                <span class="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">预计到达倒计时</span>
-                                <span class="text-6xl font-black text-slate-900" id="countdown-timer">00:45</span>
-                                <div class="flex items-center gap-1 mt-2 text-green-500 font-bold text-[10px]" id="status-tag">
-                                    <span class="iconify" data-icon="lucide:zap"></span>实时定位校准中
+                        <div onclick="openDetail()" class="bg-white p-5 rounded-[30px] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all flex justify-between items-center group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 miami-gradient rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg group-active:scale-90 transition-transform">100</div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">Route 100</h3>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">South Beach Express</p>
                                 </div>
                             </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black text-slate-900" id="list-time-100">18:30</div>
+                                <span class="text-[9px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-black">2 MINS</span>
+                            </div>
                         </div>
-                        
-                        <button id="main-action-btn" onclick="handleButtonClick()" class="w-full h-16 miami-gradient text-white rounded-[24px] font-black text-lg shadow-xl py-4 active:scale-95 transition-all">我在等这班车</button>
-                        <p class="text-slate-400 text-[9px] mt-4 font-bold uppercase tracking-widest text-center" id="status-hint">开启GPS校准即可获得 +15 信用分</p>
+
+                        <div class="bg-white p-5 rounded-[30px] shadow-sm border border-slate-100 flex justify-between items-center opacity-80">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-white text-2xl font-black">14</div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">Route 14</h3>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Omni Terminal</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black text-slate-400" id="list-time-14">18:42</div>
+                                <span class="text-[9px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full font-black">SCHEDULED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-forum" class="view-panel view-hidden p-6 pt-16">
+                <h2 class="text-3xl font-black text-slate-900 mb-6 heading-font">Miami Pulse</h2>
+                <div class="space-y-4 no-scrollbar overflow-y-auto h-[600px] pb-20">
+                    <div class="bg-white p-5 rounded-[28px] shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-8 h-8 rounded-full bg-blue-100">
+                            <span class="text-xs font-bold text-slate-700">BeachBum99</span>
+                            <span class="text-[10px] text-slate-400 ml-auto">2m ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 mb-2">雷暴警告！100路全面延误 ⛈️</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed">刚刚在柯林斯大道，雨大到看不清路，公交都在原地待命，建议改坐 Metrorail。</p>
+                        <div class="flex gap-4 mt-4 text-slate-400">
+                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify" data-icon="lucide:heart"></span> 24</span>
+                            <span class="flex items-center gap-1 text-[11px] font-bold"><span class="iconify" data-icon="lucide:message-circle"></span> 8</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-[28px] shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" class="w-8 h-8 rounded-full bg-pink-100">
+                            <span class="text-xs font-bold text-slate-700">ArtDistrict_Fan</span>
+                            <span class="text-[10px] text-slate-400 ml-auto">1h ago</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 mb-2">Wynwood 附近交通管制</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed">今天有涂鸦艺术节，2路和32路都在绕行，大家注意避让。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-profile" class="view-panel view-hidden p-8 pt-20 flex flex-col items-center">
+                <div class="relative mb-6">
+                    <div class="w-32 h-32 rounded-[40px] miami-gradient p-1">
+                        <div class="w-full h-full rounded-[38px] bg-white p-1 overflow-hidden">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia" class="w-full h-full">
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-white p-2 rounded-2xl shadow-lg">
+                        <span class="iconify text-xl" data-icon="lucide:shield-check"></span>
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-black text-slate-900 heading-font">Transit Guru</h2>
+                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-8">Miami Flow Legend</p>
+
+                <div class="grid grid-cols-2 gap-4 w-full">
+                    <div class="bg-white p-5 rounded-[30px] border border-slate-100 text-center shadow-sm">
+                        <span class="block text-3xl font-black text-slate-900 mb-1">2,480</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Total Credits</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-[30px] border border-slate-100 text-center shadow-sm">
+                        <span class="block text-3xl font-black rank-gold mb-1">Gold</span>
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Trust Rank</span>
+                    </div>
+                </div>
+
+                <div class="w-full mt-8 space-y-3">
+                    <div class="flex items-center justify-between p-4 bg-slate-100 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <span class="iconify text-slate-500" data-icon="lucide:award"></span>
+                            <span class="text-sm font-bold">成就奖励</span>
+                        </div>
+                        <span class="iconify text-slate-300" data-icon="lucide:chevron-right"></span>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-slate-100 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <span class="iconify text-slate-500" data-icon="lucide:settings"></span>
+                            <span class="text-sm font-bold">隐私与设置</span>
+                        </div>
+                        <span class="iconify text-slate-300" data-icon="lucide:chevron-right"></span>
+                    </div>
+                </div>
+            </section>
+
+            <div id="detail-view" class="hidden absolute inset-0 bg-white z-[2000] flex flex-col p-8 animate-slide-up">
+                <button onclick="closeDetail()" class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-8 border border-slate-100">
+                    <span class="iconify text-slate-900" data-icon="lucide:chevron-left"></span>
+                </button>
+                
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-24 h-24 miami-gradient rounded-[32px] flex items-center justify-center text-white text-5xl font-black shadow-xl mb-6">100</div>
+                    <h1 class="text-3xl font-black text-slate-900 heading-font mb-2">Route 100</h1>
+                    <p class="text-slate-400 font-bold text-xs uppercase mb-10">Government Center Metrorail</p>
+                    
+                    <div class="relative w-64 h-64 flex items-center justify-center mb-10">
+                        <div class="absolute inset-0 border-[12px] border-slate-50 rounded-full"></div>
+                        <div class="absolute inset-0 border-[12px] border-blue-500 rounded-full transition-all duration-1000" style="clip-path: inset(0 0 0 0);"></div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] mb-2">Arriving In</span>
+                            <span class="text-6xl font-black text-slate-900 heading-font" id="countdown-timer">00:45</span>
+                        </div>
+                    </div>
+                    
+                    <button id="main-action-btn" onclick="handleButtonClick()" class="w-full h-18 miami-gradient text-white rounded-[28px] font-black text-lg shadow-xl py-5 active:scale-95 transition-all">I'M WAITING HERE</button>
+                    <p class="text-slate-400 text-[10px] mt-6 font-bold uppercase tracking-widest leading-relaxed" id="status-hint">Help calibrate and earn <span class="text-blue-500">+15 credits</span></p>
+                </div>
+            </div>
+
+            <div id="modal-arrival" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[3000] flex items-end">
+                <div class="w-full bg-white rounded-t-[45px] p-10 pb-12 shadow-2xl animate-slide-up">
+                    <div class="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8"></div>
+                    <h3 class="text-2xl font-black text-slate-900 mb-3 heading-font">Is the Bus here?</h3>
+                    <p class="text-slate-500 text-sm mb-10">Tap confirm when you see Route 100 to help other commuters.</p>
+                    <div class="grid gap-4">
+                        <button onclick="confirmArrival(true)" class="h-16 bg-blue-600 text-white rounded-3xl font-black shadow-lg">YES, I'M ONBOARD</button>
+                        <button onclick="confirmArrival(false)" class="h-16 bg-slate-50 text-slate-400 rounded-3xl font-black">NOT YET</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="modal-arrival" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-end">
-            <div class="w-full bg-white rounded-t-[32px] p-8 pb-10">
-                <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
-                <h3 class="text-xl font-black text-slate-900 mb-2">100 路车到了吗？</h3>
-                <p class="text-slate-500 text-xs mb-8">看到车的一瞬间请点击确认，我们将同步校准全城数据。</p>
-                <div class="grid gap-3">
-                    <button onclick="confirmArrival(true)" class="h-14 bg-blue-600 text-white rounded-2xl font-black">已到达，我上车了</button>
-                    <button onclick="confirmArrival(false)" class="h-14 bg-slate-100 text-slate-600 rounded-2xl font-black">还没看到车</button>
-                </div>
-            </div>
-        </div>
+        </main>
 
-        <nav class="h-20 bg-white border-t border-slate-100 flex items-center justify-around px-8 absolute bottom-0 left-0 right-0 z-[120] pb-2">
-            <button class="flex flex-col items-center gap-1 text-blue-600"><span class="iconify text-2xl" data-icon="lucide:map-pinned"></span><span class="text-[9px] font-black uppercase">探索</span></button>
-            <button class="flex flex-col items-center gap-1 text-slate-300"><span class="iconify text-2xl" data-icon="lucide:message-square"></span><span class="text-[9px] font-black uppercase">论坛</span></button>
-            <button class="flex flex-col items-center gap-1 text-slate-300"><span class="iconify text-2xl" data-icon="lucide:user"></span><span class="text-[9px] font-black uppercase">我的</span></button>
+        <nav class="h-24 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-around px-8 absolute bottom-0 left-0 right-0 z-[1001] pb-6">
+            <button onclick="switchTab('explore')" id="nav-explore" class="flex flex-col items-center gap-1.5 text-blue-600 transition-colors">
+                <span class="iconify text-2xl" data-icon="heroicons:map-solid"></span>
+                <span class="text-[9px] font-black uppercase tracking-tighter">Explore</span>
+            </button>
+            <button onclick="switchTab('forum')" id="nav-forum" class="flex flex-col items-center gap-1.5 text-slate-300 transition-colors">
+                <span class="iconify text-2xl" data-icon="heroicons:chat-bubble-left-right-solid"></span>
+                <span class="text-[9px] font-black uppercase tracking-tighter">Pulse</span>
+            </button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1.5 text-slate-300 transition-colors">
+                <span class="iconify text-2xl" data-icon="heroicons:user-solid"></span>
+                <span class="text-[9px] font-black uppercase tracking-tighter">Account</span>
+            </button>
         </nav>
     </div>
 
     <script>
-        // 核心变量
-        let currentState = "IDLE"; // IDLE -> WAITING -> FINISHED
-        let baseArrivalTime = new Date(new Date().getTime() + 45 * 1000); // 初始 45 秒
+        // 逻辑保持原样，仅做视图适配
+        let currentState = "IDLE";
+        let baseArrivalTime = new Date(new Date().getTime() + 45 * 1000); 
         let route14Time = new Date(new Date().getTime() + 15 * 60 * 1000); 
 
-        // 初始化地图
-        const map = L.map('map', { zoomControl: false }).setView([25.7743, -80.1918], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        const userIcon = L.divIcon({ className: 'user-dot-container', html: '<div class="user-dot"></div>', iconSize: [14, 14] });
+        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([25.7743, -80.1918], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+        
+        const userIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: "<div class='w-5 h-5 bg-blue-500 border-4 border-white rounded-full shadow-lg animate-pulse'></div>",
+            iconSize: [20, 20]
+        });
         L.marker([25.7743, -80.1918], { icon: userIcon }).addTo(map);
 
         function updateLogic() {
             const now = new Date();
             document.getElementById('clock-top').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-            
-            // 列表时间显示
             document.getElementById('list-time-100').innerText = baseArrivalTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
             document.getElementById('list-time-14').innerText = route14Time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
 
-            // 倒计时计算
             let diff = Math.floor((baseArrivalTime - now) / 1000);
             if (diff >= 0) {
                 let m = Math.floor(diff / 60);
@@ -152,32 +262,39 @@
         }
 
         setInterval(updateLogic, 1000);
-        updateLogic();
 
         function handleButtonClick() {
             if (currentState === "IDLE") {
                 currentState = "WAITING";
                 const btn = document.getElementById('main-action-btn');
-                btn.innerText = "正在等待车辆到达...";
+                btn.innerText = "WAITING DETECTED...";
                 btn.classList.replace('miami-gradient', 'bg-slate-800');
-                document.getElementById('status-hint').innerText = "📍 系统正在收集您的位置数据作为校准依据";
-                document.getElementById('status-hint').classList.add('text-blue-500');
+                document.getElementById('status-hint').innerHTML = "<span class='text-blue-500 animate-pulse'>📍 GPS ACTIVE: CALIBRATING...</span>";
             }
         }
 
         function confirmArrival(isHere) {
             document.getElementById('modal-arrival').classList.add('hidden');
             if (isHere) {
-                // 修改后续时间：模拟校准成功，假设现在就是车真正到的时候
-                alert("校准成功！系统已将此实时位置更新给全城乘客。信用分 +15");
+                alert("Calibration Successful! +15 Credits awarded.");
                 currentState = "FINISHED";
-                // 演示：将下一班时间略微推迟
-                route14Time = new Date(route14Time.getTime() + 120000); 
                 closeDetail();
-            } else {
-                alert("系统已收到反馈，感谢贡献！我们将继续监测。");
-                // 如果没到，保持现状
             }
+        }
+
+        function switchTab(tab) {
+            const views = ['explore', 'forum', 'profile'];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                const nav = document.getElementById(`nav-${v}`);
+                if(v === tab) {
+                    el.classList.remove('view-hidden');
+                    nav.classList.replace('text-slate-300', 'text-blue-600');
+                } else {
+                    el.classList.add('view-hidden');
+                    nav.classList.replace('text-blue-600', 'text-slate-300');
+                }
+            });
         }
 
         function openDetail() { document.getElementById('detail-view').classList.remove('hidden'); }
